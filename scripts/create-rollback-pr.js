@@ -3,31 +3,31 @@
 /**
  * Create a PR to sync main branch with rollback version
  *
- * This script creates a PR that updates main branch with the rollback version
- * that was just published, keeping main in sync with the marketplace.
+ * This script:
+ * 1. Calculates the rollback version from main's current version
+ * 2. Creates a PR updating package.json and CHANGELOG.md
+ * 3. Keeps main in sync with what was published
  *
  * Usage: Called from GitHub Actions workflow
  * Requires environment variables:
  *   GITHUB_TOKEN - GitHub token with repo permissions
  *   GITHUB_REPOSITORY - Repository in format owner/repo
  *   SOURCE_TAG - Git tag that was rolled back to
- *   ROLLBACK_VERSION - New version number that was published
  *   GITHUB_SHA - Current commit SHA
  */
 
 const { Octokit } = require("@octokit/rest")
-const fs = require("fs")
+const { calculateRollbackVersion } = require("./set-rollback-version")
 
 async function createRollbackPR() {
 	const token = process.env.GITHUB_TOKEN
 	const repository = process.env.GITHUB_REPOSITORY
 	const sourceTag = process.env.SOURCE_TAG
-	const rollbackVersion = process.env.ROLLBACK_VERSION
 	const currentSha = process.env.GITHUB_SHA
 
-	if (!token || !repository || !sourceTag || !rollbackVersion || !currentSha) {
+	if (!token || !repository || !sourceTag || !currentSha) {
 		console.error("Missing required environment variables")
-		console.error("Required: GITHUB_TOKEN, GITHUB_REPOSITORY, SOURCE_TAG, ROLLBACK_VERSION, GITHUB_SHA")
+		console.error("Required: GITHUB_TOKEN, GITHUB_REPOSITORY, SOURCE_TAG, GITHUB_SHA")
 		process.exit(1)
 	}
 
@@ -38,7 +38,20 @@ async function createRollbackPR() {
 		console.error("Creating rollback version PR...")
 		console.error(`Repository: ${owner}/${repo}`)
 		console.error(`Source: ${sourceTag}`)
-		console.error(`Rollback version: ${rollbackVersion}`)
+		console.error("")
+
+		// Get current version from main and calculate rollback version
+		const { data: mainPackageFile } = await octokit.rest.repos.getContent({
+			owner,
+			repo,
+			path: "src/package.json",
+			ref: "main",
+		})
+		const mainVersion = JSON.parse(Buffer.from(mainPackageFile.content, "base64").toString()).version
+		const rollbackVersion = calculateRollbackVersion(mainVersion)
+
+		console.error(`Current version on main: ${mainVersion}`)
+		console.error(`Calculated rollback version: ${rollbackVersion}`)
 		console.error("")
 
 		// Create branch
@@ -52,15 +65,8 @@ async function createRollbackPR() {
 			sha: currentSha,
 		})
 
-		// Get current files from main
-		console.error("Fetching files from main...")
-
-		const { data: mainPackage } = await octokit.rest.repos.getContent({
-			owner,
-			repo,
-			path: "src/package.json",
-			ref: "main",
-		})
+		// Get CHANGELOG from main
+		console.error("Fetching CHANGELOG from main...")
 
 		const { data: mainChangelog } = await octokit.rest.repos.getContent({
 			owner,
@@ -71,7 +77,7 @@ async function createRollbackPR() {
 
 		// Update package.json
 		console.error("Updating package.json...")
-		const packageJson = JSON.parse(Buffer.from(mainPackage.content, "base64").toString())
+		const packageJson = JSON.parse(Buffer.from(mainPackageFile.content, "base64").toString())
 		packageJson.version = rollbackVersion
 
 		await octokit.rest.repos.createOrUpdateFileContents({
@@ -81,7 +87,7 @@ async function createRollbackPR() {
 			message: `chore: update version to ${rollbackVersion}`,
 			content: Buffer.from(JSON.stringify(packageJson, null, "\t") + "\n").toString("base64"),
 			branch: branchName,
-			sha: mainPackage.sha,
+			sha: mainPackageFile.sha,
 		})
 
 		// Update CHANGELOG.md

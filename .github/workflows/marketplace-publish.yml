@@ -107,10 +107,6 @@ jobs:
                     --target ${{ env.GIT_REF }} \
                     bin/kilo-code-${current_package_version}.vsix
                   echo "Successfully created GitHub Release v${current_package_version}"
-            - name: Get rollback version
-              if: ${{ inputs.rollback_source_version != '' }}
-              id: get_rollback_version
-              run: echo "version=$(node -p "require('./src/package.json').version")" >> $GITHUB_OUTPUT
             - name: Create rollback version PR
               if: ${{ inputs.rollback_source_version != '' }}
               run: node scripts/create-rollback-pr.js
@@ -118,7 +114,6 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.CROSS_REPO_ACCESS_TOKEN }}
                   GITHUB_REPOSITORY: ${{ github.repository }}
                   SOURCE_TAG: ${{ inputs.rollback_source_version }}
-                  ROLLBACK_VERSION: ${{ steps.get_rollback_version.outputs.version }}
                   GITHUB_SHA: ${{ github.sha }}
 
     publish-jetbrains:
