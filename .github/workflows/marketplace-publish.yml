@@ -20,10 +20,32 @@ jobs:
         permissions:
             contents: write # Required for pushing tags.
         steps:
+            - name: Validate rollback tag
+              if: ${{ inputs.rollback_source_version != '' }}
+              run: |
+                  TAG="${{ inputs.rollback_source_version }}"
+
+                  # Auto-fix: add 'v' prefix if missing
+                  if [[ ! "$TAG" =~ ^v ]]; then
+                    TAG="v$TAG"
+                    echo "Auto-fixed tag: $TAG (added 'v' prefix)"
+                  fi
+
+                  # Verify tag exists
+                  if ! git ls-remote --tags origin | grep -q "refs/tags/$TAG$"; then
+                    echo "❌ Error: Tag '$TAG' does not exist"
+                    echo ""
+                    echo "Available recent tags:"
+                    git ls-remote --tags origin | grep -o 'refs/tags/v[0-9].*' | sed 's|refs/tags/||' | sort -V | tail -10
+                    exit 1
+                  fi
+
+                  echo "✅ Tag '$TAG' exists"
+                  echo "VALIDATED_TAG=$TAG" >> $GITHUB_ENV
             - name: Checkout code
               uses: actions/checkout@v4
               with:
-                  ref: ${{ env.GIT_REF }}
+                  ref: ${{ env.VALIDATED_TAG || env.GIT_REF }}
             - name: Install pnpm
               uses: pnpm/action-setup@v4
               with:
@@ -123,7 +145,7 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
               with:
-                  ref: ${{ env.GIT_REF }}
+                  ref: ${{ env.VALIDATED_TAG || env.GIT_REF }}
                   submodules: recursive
                   lfs: true
             - name: Set rollback version
