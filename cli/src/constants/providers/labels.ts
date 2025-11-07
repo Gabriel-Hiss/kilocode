@@ -6,6 +6,7 @@ import type { ProviderName } from "../../types/messages.js"
  */
 export const PROVIDER_LABELS: Record<ProviderName, string> = {
 	kilocode: "Kilo Code",
+	"kilocode-openrouter": "Kilo Code OpenRouter",
 	anthropic: "Anthropic",
 	"openai-native": "OpenAI",
 	openrouter: "OpenRouter",
@@ -43,6 +44,9 @@ export const PROVIDER_LABELS: Record<ProviderName, string> = {
 	"virtual-quota-fallback": "Virtual Quota Fallback",
 	"human-relay": "Human Relay",
 	"fake-ai": "Fake AI",
+	ovhcloud: "OVHcloud AI Endpoints",
+	inception: "Inception",
+	synthetic: "Synthetic",
 }
 
 /**

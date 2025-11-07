@@ -95,6 +95,7 @@ export type RouterModels = Record<RouterName, ModelRecord>
  */
 export const PROVIDER_TO_ROUTER_NAME: Record<ProviderName, RouterName | null> = {
 	kilocode: "kilocode-openrouter",
+	"kilocode-openrouter": "kilocode-openrouter",
 	openrouter: "openrouter",
 	ollama: "ollama",
 	lmstudio: "lmstudio",
@@ -133,6 +134,9 @@ export const PROVIDER_TO_ROUTER_NAME: Record<ProviderName, RouterName | null> = 
 	"gemini-cli": null,
 	"virtual-quota-fallback": null,
 	huggingface: null,
+	ovhcloud: null,
+	inception: null,
+	synthetic: null,
 }
 
 /**
@@ -140,6 +144,7 @@ export const PROVIDER_TO_ROUTER_NAME: Record<ProviderName, RouterName | null> = 
  */
 export const PROVIDER_MODEL_FIELD: Record<ProviderName, string | null> = {
 	kilocode: "kilocodeModel",
+	"kilocode-openrouter": "openRouterModelId",
 	openrouter: "openRouterModelId",
 	ollama: "ollamaModelId",
 	lmstudio: "lmStudioModelId",
@@ -178,6 +183,9 @@ export const PROVIDER_MODEL_FIELD: Record<ProviderName, string | null> = {
 	"gemini-cli": null,
 	"virtual-quota-fallback": null,
 	huggingface: null,
+	ovhcloud: "ovhCloudAiEndpointsModelId",
+	inception: "inceptionLabsModelId",
+	synthetic: null,
 }
 
 /**

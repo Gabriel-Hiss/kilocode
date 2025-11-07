@@ -51,7 +51,8 @@ function mapProviderToApiConfig(provider: ProviderConfig): ProviderSettings {
 	// Copy all provider-specific fields
 	Object.keys(provider).forEach((key) => {
 		if (key !== "id" && key !== "provider") {
-			config[key] = provider[key]
+			// Type assertion needed because we're dynamically accessing keys
+			;(config as any)[key] = (provider as any)[key]
 		}
 	})
 
@@ -61,35 +62,35 @@ function mapProviderToApiConfig(provider: ProviderConfig): ProviderSettings {
 function getModelIdForProvider(provider: ProviderConfig): string {
 	switch (provider.provider) {
 		case "kilocode":
-			return provider.kilocodeModel || ""
+			return (provider.kilocodeModel as string | undefined) || ""
 		case "anthropic":
-			return provider.apiModelId || ""
+			return (provider.apiModelId as string | undefined) || ""
 		case "openai-native":
-			return provider.apiModelId || ""
+			return (provider.apiModelId as string | undefined) || ""
 		case "openrouter":
-			return provider.openRouterModelId || ""
+			return (provider.openRouterModelId as string | undefined) || ""
 		case "ollama":
-			return provider.ollamaModelId || ""
+			return (provider.ollamaModelId as string | undefined) || ""
 		case "lmstudio":
-			return provider.lmStudioModelId || ""
+			return (provider.lmStudioModelId as string | undefined) || ""
 		case "openai":
-			return provider.apiModelId || ""
+			return (provider.apiModelId as string | undefined) || ""
 		case "glama":
-			return provider.glamaModelId || ""
+			return (provider.glamaModelId as string | undefined) || ""
 		case "litellm":
-			return provider.litellmModelId || ""
+			return (provider.litellmModelId as string | undefined) || ""
 		case "deepinfra":
-			return provider.deepInfraModelId || ""
+			return (provider.deepInfraModelId as string | undefined) || ""
 		case "unbound":
-			return provider.unboundModelId || ""
+			return (provider.unboundModelId as string | undefined) || ""
 		case "requesty":
-			return provider.requestyModelId || ""
+			return (provider.requestyModelId as string | undefined) || ""
 		case "vercel-ai-gateway":
-			return provider.vercelAiGatewayModelId || ""
+			return (provider.vercelAiGatewayModelId as string | undefined) || ""
 		case "io-intelligence":
-			return provider.ioIntelligenceModelId || ""
+			return (provider.ioIntelligenceModelId as string | undefined) || ""
 		default:
-			return provider.apiModelId || provider.modelId || ""
+			return (provider.apiModelId as string | undefined) || (provider.modelId as string | undefined) || ""
 	}
 }
 

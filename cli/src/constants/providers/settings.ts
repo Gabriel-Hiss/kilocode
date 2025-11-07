@@ -790,6 +790,7 @@ export const getProviderSettings = (provider: ProviderName, config: ProviderSett
  */
 export const PROVIDER_DEFAULT_MODELS: Record<ProviderName, string> = {
 	kilocode: "anthropic/claude-sonnet-4",
+	"kilocode-openrouter": "anthropic/claude-sonnet-4",
 	anthropic: "claude-3-5-sonnet-20241022",
 	"openai-native": "gpt-4o",
 	openrouter: "anthropic/claude-3-5-sonnet",
@@ -827,6 +828,9 @@ export const PROVIDER_DEFAULT_MODELS: Record<ProviderName, string> = {
 	"virtual-quota-fallback": "gpt-4o",
 	"human-relay": "human",
 	"fake-ai": "fake-model",
+	ovhcloud: "gpt-4o",
+	inception: "gpt-4o",
+	synthetic: "synthetic-model",
 }
 
 /**
