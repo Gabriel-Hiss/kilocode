@@ -83,7 +83,7 @@ async function listTeams(context: CommandContext): Promise<void> {
 	}
 	// kilocode_change start
 	if (organizations.length > 0) {
-		content += `\nUse \`/teams select ${normalizeTeamName(organizations[0].name)}\` to select a team profile\n`
+		content += `\nUse \`/teams select ${normalizeTeamName(organizations[0]!.name)}\` to select a team profile\n`
 	}
 	content += `Use \`/teams select personal\` to switch to personal account\n`
 	// kilocode_change end

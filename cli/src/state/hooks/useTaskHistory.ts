@@ -49,7 +49,9 @@ export function useTaskHistory() {
 				sort: filters.sort,
 				favoritesOnly: filters.favoritesOnly,
 				pageIndex,
-				...(filters.search && { search: filters.search }),
+			}
+			if (filters.search) {
+				payload.search = filters.search
 			}
 			await service.sendWebviewMessage({
 				type: "taskHistoryRequest",
@@ -95,7 +97,9 @@ export function useTaskHistory() {
 					sort: updatedFilters.sort,
 					favoritesOnly: updatedFilters.favoritesOnly,
 					pageIndex: 0, // Filters reset to page 0
-					...(updatedFilters.search && { search: updatedFilters.search }),
+				}
+				if (updatedFilters.search) {
+					payload.search = updatedFilters.search
 				}
 				service
 					.sendWebviewMessage({
@@ -143,7 +147,9 @@ export function useTaskHistory() {
 					sort: filters.sort,
 					favoritesOnly: filters.favoritesOnly,
 					pageIndex: newPageIndex,
-					...(filters.search && { search: filters.search }),
+				}
+				if (filters.search) {
+					payload.search = filters.search
 				}
 				service
 					.sendWebviewMessage({
