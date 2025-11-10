@@ -3175,6 +3175,26 @@ export const webviewMessageHandler = async (
 				return
 			}
 
+			// kilocode_change start: Set Kilo org props before getting status
+			const { apiConfiguration } = await provider.getState()
+			if (apiConfiguration.kilocodeToken && apiConfiguration.kilocodeOrganizationId) {
+				// Get project ID from Kilo config
+				const kiloConfig = await provider.getKiloConfig()
+				const projectId = kiloConfig?.project?.id
+
+				if (projectId && !manager.getKiloOrgCodeIndexProps()) {
+					provider.log(
+						`[requestIndexingStatus] Setting Kilo org props: orgId=${apiConfiguration.kilocodeOrganizationId}`,
+					)
+					manager.setKiloOrgCodeIndexProps({
+						kilocodeToken: apiConfiguration.kilocodeToken,
+						organizationId: apiConfiguration.kilocodeOrganizationId,
+						projectId,
+					})
+				}
+			}
+			// kilocode_change end
+
 			const status = manager
 				? manager.getCurrentStatus()
 				: {
@@ -3236,27 +3256,84 @@ export const webviewMessageHandler = async (
 					provider.log("Cannot start indexing: No workspace folder open")
 					return
 				}
-				if (manager.isFeatureEnabled && manager.isFeatureConfigured) {
+
+				// kilocode_change start: Support managed indexing
+				const { apiConfiguration } = await provider.getState()
+				if (apiConfiguration.kilocodeToken && apiConfiguration.kilocodeOrganizationId) {
+					provider.log(
+						`[startIndexing] Setting Kilo org props: orgId=${apiConfiguration.kilocodeOrganizationId}`,
+					)
+					// Get project ID from Kilo config
+					const kiloConfig = await provider.getKiloConfig()
+					const projectId = kiloConfig?.project?.id
+
+					if (projectId) {
+						manager.setKiloOrgCodeIndexProps({
+							kilocodeToken: apiConfiguration.kilocodeToken,
+							organizationId: apiConfiguration.kilocodeOrganizationId,
+							projectId,
+						})
+					} else {
+						provider.log(`[startIndexing] No projectId found in Kilo config`)
+					}
+				} else {
+					provider.log(
+						`[startIndexing] No Kilo org props available: token=${!!apiConfiguration.kilocodeToken}, orgId=${!!apiConfiguration.kilocodeOrganizationId}`,
+					)
+				}
+
+				provider.log(
+					`[startIndexing] Feature enabled: ${manager.isFeatureEnabled}, configured: ${manager.isFeatureConfigured}, initialized: ${manager.isInitialized}`,
+				)
+
+				// Check if managed indexing is available (has org credentials)
+				if (manager.isManagedIndexingAvailable) {
+					provider.log(
+						`[startIndexing] Using managed indexing (already started via setKiloOrgCodeIndexProps)`,
+					)
+					// Managed indexing is already started in setKiloOrgCodeIndexProps
+					// No need to start local indexing
+				} else if (manager.isFeatureEnabled && manager.isFeatureConfigured) {
+					// Use local indexing
 					if (!manager.isInitialized) {
-						await manager.initialize(provider.contextProxy)
+						provider.log(`[startIndexing] Initializing manager for local indexing...`)
+						try {
+							await manager.initialize(provider.contextProxy)
+							provider.log(`[startIndexing] Manager initialized successfully`)
+						} catch (initError) {
+							provider.log(
+								`[startIndexing] Initialization failed: ${initError instanceof Error ? initError.message : String(initError)}`,
+							)
+							provider.log(
+								`[startIndexing] Stack: ${initError instanceof Error ? initError.stack : "N/A"}`,
+							)
+							throw initError
+						}
 					}
 
 					// startIndexing now handles error recovery internally
+					provider.log(`[startIndexing] Starting local indexing...`)
 					manager.startIndexing()
 
 					// If startIndexing recovered from error, we need to reinitialize
 					if (!manager.isInitialized) {
+						provider.log(`[startIndexing] Manager not initialized after startIndexing, reinitializing...`)
 						await manager.initialize(provider.contextProxy)
 						// Try starting again after initialization
 						manager.startIndexing()
 					}
+				} else {
+					provider.log(
+						`[startIndexing] Cannot start: enabled=${manager.isFeatureEnabled}, configured=${manager.isFeatureConfigured}`,
+					)
 				}
 			} catch (error) {
 				provider.log(`Error starting indexing: ${error instanceof Error ? error.message : String(error)}`)
+				provider.log(`Stack: ${error instanceof Error ? error.stack : "N/A"}`)
 			}
+			// kilocode_change end
 			break
 		}
-		// kilocode_change start
 		case "cancelIndexing": {
 			try {
 				const manager = provider.getCurrentWorkspaceCodeIndexManager()
