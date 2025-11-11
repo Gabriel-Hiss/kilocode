@@ -1,11 +1,23 @@
 import type OpenAI from "openai"
 
+const example = {
+	files: [
+		{
+			path: "src/app.ts",
+			line_ranges: ["1-50"],
+		},
+		{
+			path: "src/utils.ts",
+			line_ranges: ["1-50", "100-150"],
+		},
+	],
+}
+
 export const read_file_multi = {
 	type: "function",
 	function: {
 		name: "read_file",
-		description:
-			"Read one or more files and return their contents with line numbers for diffing or discussion. Use line ranges when available to keep reads efficient and combine related files when possible.",
+		description: `Read one or more files and return their contents with line numbers for diffing or discussion. Use line ranges when available to keep reads efficient and combine related files when possible. Example usage: ${JSON.stringify(example)}`,
 		strict: true,
 		parameters: {
 			type: "object",
