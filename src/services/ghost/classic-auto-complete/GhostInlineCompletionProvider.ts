@@ -10,6 +10,7 @@ import type { GhostServiceSettings } from "@roo-code/types"
 import { refuseUselessSuggestion } from "./uselessSuggestionFilter"
 
 const MAX_SUGGESTIONS_HISTORY = 20
+const DEBOUNCE_DELAY_MS = 300
 
 export type CostTrackingCallback = (
 	cost: number,
@@ -97,6 +98,7 @@ export class GhostInlineCompletionProvider implements vscode.InlineCompletionIte
 	private getSettings: () => GhostServiceSettings | null
 	private recentlyVisitedRangesService: RecentlyVisitedRangesService
 	private recentlyEditedTracker: RecentlyEditedTracker
+	private debounceTimer: NodeJS.Timeout | null = null
 
 	constructor(
 		model: GhostModel,
@@ -206,6 +208,10 @@ export class GhostInlineCompletionProvider implements vscode.InlineCompletionIte
 	}
 
 	public dispose(): void {
+		if (this.debounceTimer !== null) {
+			clearTimeout(this.debounceTimer)
+			this.debounceTimer = null
+		}
 		this.recentlyVisitedRangesService.dispose()
 		this.recentlyEditedTracker.dispose()
 	}
@@ -246,10 +252,29 @@ export class GhostInlineCompletionProvider implements vscode.InlineCompletionIte
 		}
 
 		const prompt = await this.getPrompt(document, position)
-		await this.fetchAndCacheSuggestion(prompt)
+		await this.debouncedFetchAndCacheSuggestion(prompt)
 
 		const cachedText = findMatchingSuggestion(prefix, suffix, this.suggestionsHistory)
 		return stringToInlineCompletions(cachedText ?? "", position)
+	}
+
+	private debouncedFetchAndCacheSuggestion(prompt: GhostPrompt): Promise<void> {
+		if (this.debounceTimer !== null) {
+			clearTimeout(this.debounceTimer)
+		}
+
+		return new Promise<void>((resolve) => {
+			this.debounceTimer = setTimeout(async () => {
+				// Check if timer was cleared (e.g., by dispose)
+				if (this.debounceTimer === null) {
+					resolve()
+					return
+				}
+				this.debounceTimer = null
+				await this.fetchAndCacheSuggestion(prompt)
+				resolve()
+			}, DEBOUNCE_DELAY_MS)
+		})
 	}
 
 	private async fetchAndCacheSuggestion(prompt: GhostPrompt): Promise<void> {
