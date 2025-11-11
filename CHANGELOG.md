@@ -1,8 +1,6 @@
 # kilo-code
 
-## 4.118.1
-
-### Patch Changes
+## [v4.118.1]
 
 - [#3653](https://github.com/Kilo-Org/kilocode/pull/3653) [`c79efb1`](https://github.com/Kilo-Org/kilocode/commit/c79efb1b19399ef0572d10829843732e08cd08e8) Thanks [@ctsstc](https://github.com/ctsstc)! - Added GLM 4.6 to Fireworks provider
 
