@@ -1,5 +1,11 @@
 # @kilocode/cli
 
+## 0.3.1
+
+### Patch Changes
+
+- [#3648](https://github.com/Kilo-Org/kilocode/pull/3648) [`ff2ccee`](https://github.com/Kilo-Org/kilocode/commit/ff2ccee6564ae2e80259128043f4db26e86cf953) Thanks [@catrielmuller](https://github.com/catrielmuller)! - Fix initialization race conditions on auto mode
+
 ## 0.3.0
 
 ### Minor Changes
